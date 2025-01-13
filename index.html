@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <!-- v. 1.0 -->
 
 <head>
@@ -29,7 +28,6 @@
     <link rel="apple-touch-icon" href="img/apple-icon-180.png">
 
     <style>
-
         body {
             margin: 0;
             padding: 0;
@@ -175,9 +173,11 @@
 
 
     </style>
+
 </head>
 
 <body>
+
     <div class="app">
 
         <h1>Steam Points Calculator</h1>
@@ -191,6 +191,7 @@
                     <option value="usd">USD</option>
                     <option value="eur">EUR</option>
                     <option value="rub">RUB</option>
+                    <option value="kzt">KZT</option>
                 </select>
             </div>
         </div>
@@ -199,148 +200,151 @@
             <a href="https://store.steampowered.com/points/howitworks">What is Steam Points?</a>
             <a href="https://github.com/captainmarshin/steam-points-calculator">GitHub</a>
         </div>
+
     </div>
-
     <script>
-        const pointsInput = document.getElementById('pointsInput');
-        const currencyInput = document.getElementById('currencyInput');
-        const currencySelector = document.getElementById('currencySelector');
-        const arrow = document.getElementById('arrow');
+    const pointsInput = document.getElementById('pointsInput');
+    const currencyInput = document.getElementById('currencyInput');
+    const currencySelector = document.getElementById('currencySelector');
+    const arrow = document.getElementById('arrow');
 
-        // Rates can be found on Steam Points How It Works page. Current rate and currency based on current user IP.
-        const conversionRates = {
-            usd: 100, // 100 points = $1.00
-            eur: 104, // 104 points = 1.00€
-            rub: 98 // 98 points = 100 руб.
-        };
+    // Rates can be found on Steam Points How It Works page. Current rate and currency based on current user IP.
+    const conversionRates = {
+        usd: 100, // 100 points = $1.00
+        eur: 104, // 104 points = 1.00€
+        rub: 98, // 98 points = 100 руб
+        kzt: 95 // 95 points = 500₸
+    };
 
-        // Calculate Currency function
-        function calculateCurrency() {
-            const points = parseFloat(pointsInput.value) || 0;
-            const currency = currencySelector.value;
-            const rate = conversionRates[currency];
+    // Calculate Currency function
+    function calculateCurrency() {
+        const points = parseFloat(pointsInput.value) || 0;
+        const currency = currencySelector.value;
+        const rate = conversionRates[currency];
 
-            if (currency === 'rub') {
-                currencyInput.value = (points / rate * 100).toFixed(2);
-            } else {
-                currencyInput.value = (points / rate).toFixed(2);
+        if (currency === 'rub') {
+            currencyInput.value = (points / rate * 100).toFixed(2);
+        } else if (currency === 'kzt') {
+            currencyInput.value = (points / rate * 500).toFixed(2); // KZT calculation
+        } else {
+            currencyInput.value = (points / rate).toFixed(2);
+        }
+    }
+
+    // Calculate Steam Points function
+    function calculatePoints() {
+        const currencyAmount = parseFloat(currencyInput.value) || 0;
+        const currency = currencySelector.value;
+        const rate = conversionRates[currency];
+
+        if (currency === 'rub') {
+            pointsInput.value = (currencyAmount * rate / 100).toFixed(0);
+        } else if (currency === 'kzt') {
+            pointsInput.value = (currencyAmount * rate / 500).toFixed(0); // KZT calculation
+        } else {
+            pointsInput.value = (currencyAmount * rate).toFixed(0);
+        }
+    }
+
+    // Rotate emoji arrow when user focus input
+    pointsInput.addEventListener('focus', () => {
+        arrow.classList.remove('rotate-to-points');
+        arrow.classList.add('rotate-to-currency');
+    });
+
+    currencyInput.addEventListener('focus', () => {
+        arrow.classList.remove('rotate-to-currency');
+        arrow.classList.add('rotate-to-points');
+    });
+
+    // Allow only numbers in input fields (input=number not work in Safari)
+    pointsInput.addEventListener('input', () => {
+        pointsInput.value = pointsInput.value.replace(/[^0-9]/g, '');
+        calculateCurrency();
+    });
+
+    currencyInput.addEventListener('input', () => {
+        currencyInput.value = currencyInput.value.replace(/[^0-9.]/g, '');
+        calculatePoints();
+    });
+
+    // Convert values when select curency from dropdown if inputs not empty
+    currencySelector.addEventListener('change', () => {
+        if (pointsInput.value !== '' || currencyInput.value !== '') {
+            if (pointsInput.value !== '') {
+                calculateCurrency();
+            }
+            if (currencyInput.value !== '') {
+                calculatePoints();
             }
         }
+    });
 
-        // Calculate Steam Points function
-        function calculatePoints() {
-            const currencyAmount = parseFloat(currencyInput.value) || 0;
-            const currency = currencySelector.value;
-            const rate = conversionRates[currency];
-
-            if (currency === 'rub') {
-                pointsInput.value = (currencyAmount * rate / 100).toFixed(0);
-            } else {
-                pointsInput.value = (currencyAmount * rate).toFixed(0);
-            }
-        }
-
-        // Rotate emoji arrow when user focus input
-        pointsInput.addEventListener('focus', () => {
-            arrow.classList.remove('rotate-to-points');
-            arrow.classList.add('rotate-to-currency');
-        });
-
-        currencyInput.addEventListener('focus', () => {
+    // Focus input based on arrow location. It's works like switch, if arrow look on currency, 
+    // arrow will flip and focus currency input means conversion will be from currency to points
+    arrow.addEventListener('click', () => {
+        if (arrow.classList.contains('rotate-to-currency')) {
+            currencyInput.focus();
             arrow.classList.remove('rotate-to-currency');
             arrow.classList.add('rotate-to-points');
-        });
-
-        // Allow only numbers in input fields (input=number not work in Safari)
-        pointsInput.addEventListener('input', () => {
-            pointsInput.value = pointsInput.value.replace(/[^0-9]/g, ''); 
-            calculateCurrency();
-        });
-
-        currencyInput.addEventListener('input', () => {
-            currencyInput.value = currencyInput.value.replace(/[^0-9.]/g, '');
-            calculatePoints();
-        });
-
-        // Convert values when select curency from dropdown if inputs not empty
-        currencySelector.addEventListener('change', () => {
-            if (pointsInput.value !== '' || currencyInput.value !== '') {
-                if (pointsInput.value !== '') {
-                    calculateCurrency();
-                }
-                if (currencyInput.value !== '') {
-                    calculatePoints();
-                }
-            }
-        });
-
-        // Focus input based on arrow location. It's works like switch, if arrow look on currency, 
-        // arrow will flip and focus currency input means conversion will be from currency to points
-        arrow.addEventListener('click', () => {
-            if (arrow.classList.contains('rotate-to-currency')) {
-                currencyInput.focus();
-                arrow.classList.remove('rotate-to-currency');
-                arrow.classList.add('rotate-to-points');
-            } else {
-                pointsInput.focus();
-                arrow.classList.remove('rotate-to-points');
-                arrow.classList.add('rotate-to-currency');
-            }
-        });
-
-        // Creates clear zone outside main apps elements. If user click on background (excluding app title, inputs, arrow, footer links)
-        // all inputs will be cleared from text
-        const clearZone = document.createElement('div');
-        clearZone.classList.add('clear-zone');
-        document.body.appendChild(clearZone);
-
-        document.addEventListener('click', (event) => {
-            const h1 = document.querySelector('h1');
-            const calculator = document.querySelector('.calculator');
-            const footer = document.querySelector('.footer');
-            
-            if (!h1.contains(event.target) && !calculator.contains(event.target) && !footer.contains(event.target)) {
-                pointsInput.value = '';
-                currencyInput.value = '';
-                arrow.classList.remove('rotate-to-points');
-                arrow.classList.add('rotate-to-currency');
-
-                createClearedEffect(event.clientX, event.clientY);
-            }
-        });
-
-        // Adds "Cleared!" text near cursor when clear zone is clicked by user
-        function createClearedEffect(x, y) {
-
-            const cleared = document.createElement('span');
-            cleared.textContent = 'Cleared!';
-            cleared.style.position = 'absolute';
-            cleared.style.left = `${x}px`;
-            cleared.style.top = `${y}px`;
-            cleared.style.margin = '-10px 0px 0px 24px';
-            cleared.style.color = 'white';
-            cleared.style.fontSize = '0.7em';
-            cleared.style.pointerEvents = 'none';
-            cleared.style.zIndex = '9999';
-            cleared.style.opacity = '1';
-            cleared.style.transition = 'opacity 1s ease-out, transform 1s ease-out';
-            // cleared.style.transform = 'translateY(0px) scale(1)';
-            cleared.style.transform = 'scale(1)';
-
-            document.body.appendChild(cleared);
-
-            requestAnimationFrame(() => {
-                cleared.style.opacity = '0';
-                cleared.style.transform = 'scale(1.3)';
-                // cleared.style.transform = 'translateY(-10px) scale(1.2)';
-            });
-
-            setTimeout(() => {
-                cleared.remove();
-            }, 1000);
+        } else {
+            pointsInput.focus();
+            arrow.classList.remove('rotate-to-points');
+            arrow.classList.add('rotate-to-currency');
         }
+    });
 
+    // Creates clear zone outside main apps elements. If user click on background (excluding app title, inputs, arrow, footer links)
+    // all inputs will be cleared from text
+    const clearZone = document.createElement('div');
+    clearZone.classList.add('clear-zone');
+    document.body.appendChild(clearZone);
 
+    document.addEventListener('click', (event) => {
+        const h1 = document.querySelector('h1');
+        const calculator = document.querySelector('.calculator');
+        const footer = document.querySelector('.footer');
+
+        if (!h1.contains(event.target) && !calculator.contains(event.target) && !footer.contains(event.target)) {
+            pointsInput.value = '';
+            currencyInput.value = '';
+            arrow.classList.remove('rotate-to-points');
+            arrow.classList.add('rotate-to-currency');
+
+            createClearedEffect(event.clientX, event.clientY);
+        }
+    });
+
+    // Adds "Cleared!" text near cursor when clear zone is clicked by user
+    function createClearedEffect(x, y) {
+
+        const cleared = document.createElement('span');
+        cleared.textContent = 'Cleared!';
+        cleared.style.position = 'absolute';
+        cleared.style.left = `${x}px`;
+        cleared.style.top = `${y}px`;
+        cleared.style.margin = '-10px 0px 0px 24px';
+        cleared.style.color = 'white';
+        cleared.style.fontSize = '0.7em';
+        cleared.style.pointerEvents = 'none';
+        cleared.style.zIndex = '9999';
+        cleared.style.opacity = '1';
+        cleared.style.transition = 'opacity 1s ease-out, transform 1s ease-out';
+        // cleared.style.transform = 'translateY(0px) scale(1)';
+        cleared.style.transform = 'scale(1)';
+
+        document.body.appendChild(cleared);
+
+        requestAnimationFrame(() => {
+            cleared.style.opacity = '0';
+            cleared.style.transform = 'scale(1.3)';
+            // cleared.style.transform = 'translateY(-10px) scale(1.2)';
+        });
+
+        setTimeout(() => {
+            cleared.remove();
+        }, 1000);
+    }
     </script>
 
 </body>
