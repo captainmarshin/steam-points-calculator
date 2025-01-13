@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- v. 1.0 -->
+
+<head>
+    <meta charset="utf-8">
+    <title>Steam Points Calculator</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="title" content="Steam Points Calculator">
+    <meta name="description" content="Easily convert Steam Points to USD, EUR, RUB, or vice versa.">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:title" content="Steam Points Calculator">
+    <meta property="og:description" content="Easily convert Steam Points to USD, EUR, RUB, or vice versa.">
+    <meta property="og:image" content="img/preview.png">
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="">
+    <meta property="twitter:title" content="Steam Points Calculator">
+    <meta property="twitter:description" content="Easily convert Steam Points to USD, EUR, RUB, or vice versa.">
+    <meta property="twitter:image" content="img/preview.png">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="196x196" href="img/favicon-196.png">
+    <link rel="apple-touch-icon" href="img/apple-icon-180.png">
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            overflow: hidden;
+            position: relative;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body:active{
+            /* cursor: not-allowed;*/
+        }
+
+        .app {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app::before {
+            content: "";
+            position: absolute;
+            width: 180%;
+            height: 180%;
+            background: url('img/background.png') repeat;
+            background-size: 300px;
+            transform: rotate(-20deg);
+            z-index: -1;
+            opacity: 0.5;
+            overflow: hidden;
+        }
+
+        .app::before {
+            animation: moveCoins 80s linear infinite;
+        }
+
+        @keyframes moveCoins {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 0 100%;
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(to bottom, #FFFFFF, #929292);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+            transform: translateY(-50px);
+        }
+
+        .calculator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(-50px);
+            cursor: default;
+        }
+
+        ::placeholder{
+            font-weight: 400;
+        }
+
+        input {
+            width: 375px;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            background-color: #ffffff;
+            color: #000000;
+            cursor: text;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .currency-input {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        select {
+            position: absolute;
+            right: 0;
+            height: 100%;
+            font-size: 1.2rem;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: #000000;
+            cursor: pointer;
+        }
+
+        .arrow {
+            font-size: 1.5rem;
+            color: #ffffff;
+            transition: transform 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        .arrow.rotate-to-currency {
+            transform: rotate(0deg);
+        }
+
+        .arrow.rotate-to-points {
+            transform: rotate(-180deg);
+        }
+
+        .footer {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .footer a {
+            color: #555;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <div class="app">
+
+        <h1>Steam Points Calculator</h1>
+        
+        <div class="calculator">
+            <input type="number" id="pointsInput" placeholder="Points">
+            <span class="arrow rotate-to-currency" id="arrow">➡️</span>
+            <div class="currency-input">
+                <input type="number" id="currencyInput" placeholder="Currency">
+                <select id="currencySelector">
+                    <option value="usd">USD</option>
+                    <option value="eur">EUR</option>
+                    <option value="rub">RUB</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="https://store.steampowered.com/points/howitworks">What is Steam Points?</a>
+            <a href="https://github.com/captainmarshin/steam-points-calculator">GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        const pointsInput = document.getElementById('pointsInput');
+        const currencyInput = document.getElementById('currencyInput');
+        const currencySelector = document.getElementById('currencySelector');
+        const arrow = document.getElementById('arrow');
+
+        // Rates can be found on Steam Points How It Works page. Current rate and currency based on current user IP.
+        const conversionRates = {
+            usd: 100, // 100 points = $1.00
+            eur: 104, // 104 points = 1.00€
+            rub: 98 // 98 points = 100 руб.
+        };
+
+        // Calculate Currency function
+        function calculateCurrency() {
+            const points = parseFloat(pointsInput.value) || 0;
+            const currency = currencySelector.value;
+            const rate = conversionRates[currency];
+
+            if (currency === 'rub') {
+                currencyInput.value = (points / rate * 100).toFixed(2);
+            } else {
+                currencyInput.value = (points / rate).toFixed(2);
+            }
+        }
+
+        // Calculate Steam Points function
+        function calculatePoints() {
+            const currencyAmount = parseFloat(currencyInput.value) || 0;
+            const currency = currencySelector.value;
+            const rate = conversionRates[currency];
+
+            if (currency === 'rub') {
+                pointsInput.value = (currencyAmount * rate / 100).toFixed(0);
+            } else {
+                pointsInput.value = (currencyAmount * rate).toFixed(0);
+            }
+        }
+
+        // Rotate emoji arrow when user focus input
+        pointsInput.addEventListener('focus', () => {
+            arrow.classList.remove('rotate-to-points');
+            arrow.classList.add('rotate-to-currency');
+        });
+
+        currencyInput.addEventListener('focus', () => {
+            arrow.classList.remove('rotate-to-currency');
+            arrow.classList.add('rotate-to-points');
+        });
+
+        // Allow only numbers in input fields (input=number not work in Safari)
+        pointsInput.addEventListener('input', () => {
+            pointsInput.value = pointsInput.value.replace(/[^0-9]/g, ''); 
+            calculateCurrency();
+        });
+
+        currencyInput.addEventListener('input', () => {
+            currencyInput.value = currencyInput.value.replace(/[^0-9.]/g, '');
+            calculatePoints();
+        });
+
+        // Convert values when select curency from dropdown if inputs not empty
+        currencySelector.addEventListener('change', () => {
+            if (pointsInput.value !== '' || currencyInput.value !== '') {
+                if (pointsInput.value !== '') {
+                    calculateCurrency();
+                }
+                if (currencyInput.value !== '') {
+                    calculatePoints();
+                }
+            }
+        });
+
+        // Focus input based on arrow location. It's works like switch, if arrow look on currency, 
+        // arrow will flip and focus currency input means conversion will be from currency to points
+        arrow.addEventListener('click', () => {
+            if (arrow.classList.contains('rotate-to-currency')) {
+                currencyInput.focus();
+                arrow.classList.remove('rotate-to-currency');
+                arrow.classList.add('rotate-to-points');
+            } else {
+                pointsInput.focus();
+                arrow.classList.remove('rotate-to-points');
+                arrow.classList.add('rotate-to-currency');
+            }
+        });
+
+        // Creates clear zone outside main apps elements. If user click on background (excluding app title, inputs, arrow, footer links)
+        // all inputs will be cleared from text
+        const clearZone = document.createElement('div');
+        clearZone.classList.add('clear-zone');
+        document.body.appendChild(clearZone);
+
+        document.addEventListener('click', (event) => {
+            const h1 = document.querySelector('h1');
+            const calculator = document.querySelector('.calculator');
+            const footer = document.querySelector('.footer');
+            
+            if (!h1.contains(event.target) && !calculator.contains(event.target) && !footer.contains(event.target)) {
+                pointsInput.value = '';
+                currencyInput.value = '';
+                arrow.classList.remove('rotate-to-points');
+                arrow.classList.add('rotate-to-currency');
+
+                createClearedEffect(event.clientX, event.clientY);
+            }
+        });
+
+        // Adds "Cleared!" text near cursor when clear zone is clicked by user
+        function createClearedEffect(x, y) {
+
+            const cleared = document.createElement('span');
+            cleared.textContent = 'Cleared!';
+            cleared.style.position = 'absolute';
+            cleared.style.left = `${x}px`;
+            cleared.style.top = `${y}px`;
+            cleared.style.margin = '-10px 0px 0px 24px';
+            cleared.style.color = 'white';
+            cleared.style.fontSize = '0.7em';
+            cleared.style.pointerEvents = 'none';
+            cleared.style.zIndex = '9999';
+            cleared.style.opacity = '1';
+            cleared.style.transition = 'opacity 1s ease-out, transform 1s ease-out';
+            // cleared.style.transform = 'translateY(0px) scale(1)';
+            cleared.style.transform = 'scale(1)';
+
+            document.body.appendChild(cleared);
+
+            requestAnimationFrame(() => {
+                cleared.style.opacity = '0';
+                cleared.style.transform = 'scale(1.3)';
+                // cleared.style.transform = 'translateY(-10px) scale(1.2)';
+            });
+
+            setTimeout(() => {
+                cleared.remove();
+            }, 1000);
+        }
+
+
+    </script>
+
+</body>
+</html>
